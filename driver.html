@@ -98,14 +98,26 @@ Driver.prototype._matchingRoutes = function _matchingRoutes(parts, rootRoutes) {
   var routes = [];
   var candidates = rootRoutes || this._rootRoutes;
   var route;
+  var deactivateRoute;
   for (var i = 0; i < candidates.length; i++) {
     route = candidates[i];
     route.processPathParts(parts);
     if (route.active) {
-      routes.push(route);
-      routes = routes.concat(this._matchingRoutes(parts.slice(route.compiled.length), route.children));
+      if (route.deactivate) {
+        deactivateRoute = route;
+        delete route.deactivate;
+      } else {
+        routes.push(route);
+        routes = routes.concat(this._matchingRoutes(parts.slice(route.compiled.length), route.children));
+      }
     }
   }
+  
+  // Deactivate old route if we have one
+  if (deactivateRoute) {
+    deactivateRoute.active = false;
+  }
+    
   return routes;
 }
 
